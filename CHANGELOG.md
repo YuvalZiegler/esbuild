@@ -57,6 +57,12 @@ Unlike previous releases, many of these changes are very clearly breaking change
 
     Normal usage of the `esbuild` package should not be affected. These name changes should only affect users of the `esbuild-wasm` package as well as tools that hard-coded the individual binary executable package names into custom esbuild downloader scripts.
 
+* Avoid marking entry points as external
+
+    Previously you couldn't specify `--external:*` to mark all import paths as external because that also ended up making the entry point itself external, which caused the build to fail. With this release, esbuild's `external` API parameter no longer applies to entry points so using `--external:*` is now possible.
+
+    One additional consequence of this change is that the `kind` parameter is now required when calling the `resolve()` function in esbuild's plugin API. Previously the `kind` parameter defaulted to `entry-point`, but that no longer interacts with `external` so it didn't seem wise for this to continue to be the default. You now have to specify `kind` so that the path resolution mode is explicit.
+
 * Rename the `master` branch to `main`
 
     The primary branch for this repository was previously called `master` but is now called `main`. This change mirrors a similar change in many other projects.

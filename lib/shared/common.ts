@@ -787,6 +787,7 @@ export function createChannel(streamIn: StreamIn): StreamOut {
             if (namespace != null) request.namespace = namespace
             if (resolveDir != null) request.resolveDir = resolveDir
             if (kind != null) request.kind = kind
+            else throw new Error(`Must specify "kind" when calling "resolve"`)
             if (pluginData != null) request.pluginData = stash.store(pluginData)
 
             sendRequest<protocol.ResolveRequest, protocol.ResolveResponse>(refs, request, (error, response) => {
