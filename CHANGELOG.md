@@ -19,6 +19,12 @@ Unlike previous releases, many of these changes are very clearly breaking change
         * JS: `jsx` => `jsx` (no change)
         * Go: `JSXMode` => `JSX`
 
+* Add additional validation of API parameters
+
+    The JavaScript API now does some additional validation of API parameters to catch incorrect uses of esbuild's API. The biggest impact of this is likely that esbuild now strictly only accepts strings with the `define` parameter. This would already have been a type error with esbuild's TypeScript type definitions, but it was previously not enforced for people using esbuild's API JavaScript without TypeScript.
+
+    The `define` parameter appears at first glance to take a JSON object if you aren't paying close attention, but this actually isn't true. Values for `define` are instead strings of JavaScript code. This means you have to use `define: { foo: '"bar"' }` to replace `foo` with the string `"bar"`. Using `define: { foo: 'bar' }` actually replaces `foo` with the identifier `bar`. Previously esbuild allowed you to pass `define: { foo: false }` and `false` was automatically converted into a string, which made it more confusing to understand what `define` actually represents. Starting with this release, passing non-string values such as with `define: { foo: false }` will no longer be allowed.
+
 * Move all binary executable packages to the `@esbuild/` scope
 
     Binary package executables for esbuild are published as individual packages separate from the main `esbuild` package so you only have to download the relevant one for the current platform when you install esbuild. This release moves all of these packages under the `@esbuild/` scope to avoid collisions with 3rd-party packages. It also changes them to a consistent naming scheme that uses the `os` and `cpu` names from node.
@@ -1626,7 +1632,7 @@ Something went wrong with the publishing script for the previous release. Publis
 
 * Add support for parsing "optional variance annotations" from TypeScript 4.7 ([#2102](https://github.com/evanw/esbuild/pull/2102))
 
-    The upcoming version of TypeScript now lets you specify `in` and/or `out` on certain type parameters (specifically only on a type alias, an interface declaration, or a class declaration). These modifiers control type paramemter covariance and contravariance:
+    The upcoming version of TypeScript now lets you specify `in` and/or `out` on certain type parameters (specifically only on a type alias, an interface declaration, or a class declaration). These modifiers control type parameter covariance and contravariance:
 
     ```ts
     type Provider<out T> = () => T;

@@ -3,8 +3,10 @@ import * as protocol from "./stdio_protocol";
 
 declare const ESBUILD_VERSION: string;
 
+const quote: (x: string) => string = JSON.stringify
+
 function validateTarget(target: string): string {
-  target += ''
+  validateStringValue(target, 'target')
   if (target.indexOf(',') >= 0) throw new Error(`Invalid target: ${target}`)
   return target
 }
@@ -63,14 +65,14 @@ function getFlag<T, K extends (keyof T & string)>(object: T, keys: OptionKeys, k
   keys[key + ''] = true;
   if (value === undefined) return undefined;
   let mustBe = mustBeFn(value);
-  if (mustBe !== null) throw new Error(`"${key}" must be ${mustBe}`);
+  if (mustBe !== null) throw new Error(`${quote(key)} must be ${mustBe}`);
   return value;
 }
 
 function checkForInvalidFlags(object: Object, keys: OptionKeys, where: string): void {
   for (let key in object) {
     if (!(key in keys)) {
-      throw new Error(`Invalid option ${where}: "${key}"`);
+      throw new Error(`Invalid option ${where}: ${quote(key)}`);
     }
   }
 }
@@ -94,12 +96,12 @@ function validateMangleCache(mangleCache: MangleCache | undefined): MangleCache 
   let validated: MangleCache | undefined
   if (mangleCache !== undefined) {
     validated = Object.create(null) as MangleCache
-    for (let key of Object.keys(mangleCache)) {
+    for (let key in mangleCache) {
       let value = mangleCache[key]
       if (typeof value === 'string' || value === false) {
         validated[key] = value
       } else {
-        throw new Error(`Expected ${JSON.stringify(key)} in mangle cache to map to either a string or false`)
+        throw new Error(`Expected ${quote(key)} in mangle cache to map to either a string or false`)
       }
     }
   }
@@ -117,6 +119,13 @@ function pushLogFlags(flags: string[], options: CommonOptions, keys: OptionKeys,
   else if (isTTY) flags.push(`--color=true`); // This is needed to fix "execFileSync" which buffers stderr
   flags.push(`--log-level=${logLevel || logLevelDefault}`);
   flags.push(`--log-limit=${logLimit || 0}`);
+}
+
+function validateStringValue(value: unknown, what: string, key?: string): string {
+  if (typeof value !== 'string') {
+    throw new Error(`Expected value for ${what}${key !== void 0 ? ' ' + quote(key) : ''} to be a string, got ${typeof value} instead`);
+  }
+  return value
 }
 
 function pushCommonFlags(flags: string[], options: CommonOptions, keys: OptionKeys): void {
@@ -167,7 +176,7 @@ function pushCommonFlags(flags: string[], options: CommonOptions, keys: OptionKe
   if (charset) flags.push(`--charset=${charset}`);
   if (treeShaking !== void 0) flags.push(`--tree-shaking=${treeShaking}`);
   if (ignoreAnnotations) flags.push(`--ignore-annotations`);
-  if (drop) for (let what of drop) flags.push(`--drop:${what}`);
+  if (drop) for (let what of drop) flags.push(`--drop:${validateStringValue(what, 'drop')}`);
   if (mangleProps) flags.push(`--mangle-props=${mangleProps.source}`);
   if (reserveProps) flags.push(`--reserve-props=${reserveProps.source}`);
   if (mangleQuoted !== void 0) flags.push(`--mangle-quoted=${mangleQuoted}`)
@@ -181,22 +190,24 @@ function pushCommonFlags(flags: string[], options: CommonOptions, keys: OptionKe
   if (define) {
     for (let key in define) {
       if (key.indexOf('=') >= 0) throw new Error(`Invalid define: ${key}`);
-      flags.push(`--define:${key}=${define[key]}`);
+      flags.push(`--define:${key}=${validateStringValue(define[key], 'define', key)}`);
     }
   }
   if (logOverride) {
     for (let key in logOverride) {
       if (key.indexOf('=') >= 0) throw new Error(`Invalid log override: ${key}`);
-      flags.push(`--log-override:${key}=${logOverride[key]}`);
+      flags.push(`--log-override:${key}=${validateStringValue(logOverride[key], 'log override', key)}`);
     }
   }
   if (supported) {
     for (let key in supported) {
       if (key.indexOf('=') >= 0) throw new Error(`Invalid supported: ${key}`);
-      flags.push(`--supported:${key}=${supported[key]}`);
+      const value = supported[key]
+      if (typeof value !== 'boolean') throw new Error(`Expected value for supported ${quote(key)} to be a boolean, got ${typeof value} instead`);
+      flags.push(`--supported:${key}=${value}`);
     }
   }
-  if (pure) for (let fn of pure) flags.push(`--pure:${fn}`);
+  if (pure) for (let fn of pure) flags.push(`--pure:${validateStringValue(fn, 'pure')}`);
   if (keepNames) flags.push(`--keep-names`);
 }
 
@@ -285,7 +296,7 @@ function flagsForBuildOptions(
   if (resolveExtensions) {
     let values: string[] = [];
     for (let value of resolveExtensions) {
-      value += '';
+      validateStringValue(value, 'resolve extension')
       if (value.indexOf(',') >= 0) throw new Error(`Invalid resolve extension: ${value}`);
       values.push(value);
     }
@@ -298,7 +309,7 @@ function flagsForBuildOptions(
   if (mainFields) {
     let values: string[] = [];
     for (let value of mainFields) {
-      value += '';
+      validateStringValue(value, 'main field')
       if (value.indexOf(',') >= 0) throw new Error(`Invalid main field: ${value}`);
       values.push(value);
     }
@@ -307,47 +318,47 @@ function flagsForBuildOptions(
   if (conditions) {
     let values: string[] = [];
     for (let value of conditions) {
-      value += '';
+      validateStringValue(value, 'condition')
       if (value.indexOf(',') >= 0) throw new Error(`Invalid condition: ${value}`);
       values.push(value);
     }
     flags.push(`--conditions=${values.join(',')}`);
   }
-  if (external) for (let name of external) flags.push(`--external:${name}`);
+  if (external) for (let name of external) flags.push(`--external:${validateStringValue(name, 'external')}`);
   if (banner) {
     for (let type in banner) {
       if (type.indexOf('=') >= 0) throw new Error(`Invalid banner file type: ${type}`);
-      flags.push(`--banner:${type}=${banner[type]}`);
+      flags.push(`--banner:${type}=${validateStringValue(banner[type], 'banner', type)}`);
     }
   }
   if (footer) {
     for (let type in footer) {
       if (type.indexOf('=') >= 0) throw new Error(`Invalid footer file type: ${type}`);
-      flags.push(`--footer:${type}=${footer[type]}`);
+      flags.push(`--footer:${type}=${validateStringValue(footer[type], 'footer', type)}`);
     }
   }
-  if (inject) for (let path of inject) flags.push(`--inject:${path}`);
+  if (inject) for (let path of inject) flags.push(`--inject:${validateStringValue(path, 'inject')}`);
   if (loader) {
     for (let ext in loader) {
       if (ext.indexOf('=') >= 0) throw new Error(`Invalid loader extension: ${ext}`);
-      flags.push(`--loader:${ext}=${loader[ext]}`);
+      flags.push(`--loader:${ext}=${validateStringValue(loader[ext], 'loader', ext)}`);
     }
   }
   if (outext) {
     for (let ext in outext) {
       if (ext.indexOf('=') >= 0) throw new Error(`Invalid outext: ${ext}`);
-      flags.push(`--outext:${ext}=${outext[ext]}`);
+      flags.push(`--outext:${ext}=${validateStringValue(outext[ext], 'outext', ext)}`);
     }
   }
 
   if (entryPoints) {
     if (Array.isArray(entryPoints)) {
       for (let entryPoint of entryPoints) {
-        entries.push(['', entryPoint + '']);
+        entries.push(['', validateStringValue(entryPoint, 'entry point')]);
       }
     } else {
-      for (let [key, value] of Object.entries(entryPoints)) {
-        entries.push([key + '', value + '']);
+      for (let key in entryPoints) {
+        entries.push([key, validateStringValue(entryPoints[key], 'entry point', key)]);
       }
     }
   }
@@ -362,7 +373,7 @@ function flagsForBuildOptions(
 
     if (sourcefile) flags.push(`--sourcefile=${sourcefile}`);
     if (loader) flags.push(`--loader=${loader}`);
-    if (resolveDir) stdinResolveDir = resolveDir + '';
+    if (resolveDir) stdinResolveDir = resolveDir;
     if (typeof contents === 'string') stdinContents = protocol.encodeUTF8(contents)
     else if (contents instanceof Uint8Array) stdinContents = contents
   }
@@ -665,7 +676,7 @@ export function createChannel(streamIn: StreamIn): StreamOut {
       // errors that appear to indicate an incorrect installation.
       let binaryVersion = String.fromCharCode(...bytes);
       if (binaryVersion !== ESBUILD_VERSION) {
-        throw new Error(`Cannot start service: Host version "${ESBUILD_VERSION}" does not match binary version ${JSON.stringify(binaryVersion)}`);
+        throw new Error(`Cannot start service: Host version "${ESBUILD_VERSION}" does not match binary version ${quote(binaryVersion)}`);
       }
       return;
     }
@@ -743,7 +754,7 @@ export function createChannel(streamIn: StreamIn): StreamOut {
       try {
         let setup = getFlag(item, keys, 'setup', mustBeFunction);
         if (typeof setup !== 'function') throw new Error(`Plugin is missing a setup function`);
-        checkForInvalidFlags(item, keys, `on plugin ${JSON.stringify(name)}`);
+        checkForInvalidFlags(item, keys, `on plugin ${quote(name)}`);
 
         let plugin: protocol.BuildPlugin = {
           name,
@@ -817,7 +828,7 @@ export function createChannel(streamIn: StreamIn): StreamOut {
             let keys: OptionKeys = {};
             let filter = getFlag(options, keys, 'filter', mustBeRegExp);
             let namespace = getFlag(options, keys, 'namespace', mustBeString);
-            checkForInvalidFlags(options, keys, `in onResolve() call for plugin ${JSON.stringify(name)}`);
+            checkForInvalidFlags(options, keys, `in onResolve() call for plugin ${quote(name)}`);
             if (filter == null) throw new Error(`onResolve() call is missing a filter`);
             let id = nextCallbackID++;
             onResolveCallbacks[id] = { name: name!, callback, note: registeredNote };
@@ -830,7 +841,7 @@ export function createChannel(streamIn: StreamIn): StreamOut {
             let keys: OptionKeys = {};
             let filter = getFlag(options, keys, 'filter', mustBeRegExp);
             let namespace = getFlag(options, keys, 'namespace', mustBeString);
-            checkForInvalidFlags(options, keys, `in onLoad() call for plugin ${JSON.stringify(name)}`);
+            checkForInvalidFlags(options, keys, `in onLoad() call for plugin ${quote(name)}`);
             if (filter == null) throw new Error(`onLoad() call is missing a filter`);
             let id = nextCallbackID++;
             onLoadCallbacks[id] = { name: name!, callback, note: registeredNote };
@@ -862,11 +873,11 @@ export function createChannel(streamIn: StreamIn): StreamOut {
               let result = await callback();
 
               if (result != null) {
-                if (typeof result !== 'object') throw new Error(`Expected onStart() callback in plugin ${JSON.stringify(name)} to return an object`);
+                if (typeof result !== 'object') throw new Error(`Expected onStart() callback in plugin ${quote(name)} to return an object`);
                 let keys: OptionKeys = {};
                 let errors = getFlag(result, keys, 'errors', mustBeArray);
                 let warnings = getFlag(result, keys, 'warnings', mustBeArray);
-                checkForInvalidFlags(result, keys, `from onStart() callback in plugin ${JSON.stringify(name)}`);
+                checkForInvalidFlags(result, keys, `from onStart() callback in plugin ${quote(name)}`);
 
                 if (errors != null) response.errors!.push(...sanitizeMessages(errors, 'errors', stash, name));
                 if (warnings != null) response.warnings!.push(...sanitizeMessages(warnings, 'warnings', stash, name));
@@ -893,7 +904,7 @@ export function createChannel(streamIn: StreamIn): StreamOut {
               });
 
               if (result != null) {
-                if (typeof result !== 'object') throw new Error(`Expected onResolve() callback in plugin ${JSON.stringify(name)} to return an object`);
+                if (typeof result !== 'object') throw new Error(`Expected onResolve() callback in plugin ${quote(name)} to return an object`);
                 let keys: OptionKeys = {};
                 let pluginName = getFlag(result, keys, 'pluginName', mustBeString);
                 let path = getFlag(result, keys, 'path', mustBeString);
@@ -906,7 +917,7 @@ export function createChannel(streamIn: StreamIn): StreamOut {
                 let warnings = getFlag(result, keys, 'warnings', mustBeArray);
                 let watchFiles = getFlag(result, keys, 'watchFiles', mustBeArray);
                 let watchDirs = getFlag(result, keys, 'watchDirs', mustBeArray);
-                checkForInvalidFlags(result, keys, `from onResolve() callback in plugin ${JSON.stringify(name)}`);
+                checkForInvalidFlags(result, keys, `from onResolve() callback in plugin ${quote(name)}`);
 
                 response.id = id;
                 if (pluginName != null) response.pluginName = pluginName;
@@ -942,7 +953,7 @@ export function createChannel(streamIn: StreamIn): StreamOut {
               });
 
               if (result != null) {
-                if (typeof result !== 'object') throw new Error(`Expected onLoad() callback in plugin ${JSON.stringify(name)} to return an object`);
+                if (typeof result !== 'object') throw new Error(`Expected onLoad() callback in plugin ${quote(name)} to return an object`);
                 let keys: OptionKeys = {};
                 let pluginName = getFlag(result, keys, 'pluginName', mustBeString);
                 let contents = getFlag(result, keys, 'contents', mustBeStringOrUint8Array);
@@ -953,7 +964,7 @@ export function createChannel(streamIn: StreamIn): StreamOut {
                 let warnings = getFlag(result, keys, 'warnings', mustBeArray);
                 let watchFiles = getFlag(result, keys, 'watchFiles', mustBeArray);
                 let watchDirs = getFlag(result, keys, 'watchDirs', mustBeArray);
-                checkForInvalidFlags(result, keys, `from onLoad() callback in plugin ${JSON.stringify(name)}`);
+                checkForInvalidFlags(result, keys, `from onLoad() callback in plugin ${quote(name)}`);
 
                 response.id = id;
                 if (pluginName != null) response.pluginName = pluginName;
@@ -1686,7 +1697,7 @@ function sanitizeMessages(messages: types.PartialMessage[], property: string, st
 function sanitizeStringArray(values: any[], property: string): string[] {
   const result: string[] = [];
   for (const value of values) {
-    if (typeof value !== 'string') throw new Error(`${JSON.stringify(property)} must be an array of strings`);
+    if (typeof value !== 'string') throw new Error(`${quote(property)} must be an array of strings`);
     result.push(value);
   }
   return result;
