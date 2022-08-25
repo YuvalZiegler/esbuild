@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+**This release contains backwards-incompatible changes.** Since esbuild is before version 1.0.0, these changes have been released as a new minor version to reflect this (as [recommended by npm](https://docs.npmjs.com/cli/v6/using-npm/semver/)). You should either be pinning the exact version of `esbuild` in your `package.json` file or be using a version range syntax that only accepts patch upgrades such as `~0.15.0`. See the documentation about [semver](https://docs.npmjs.com/cli/v6/using-npm/semver/) for more information.
+
+Unlike previous releases, many of these changes are very clearly breaking changes. These are changes that I have been meaning to make for a while. I have deliberately batched them up into a single release instead of doing them over time as they have become apparent to minimize the disruption they will cause. Releases like this do not happen often.
+
+* Rename the `master` branch to `main`
+
+    The primary branch for this repository was previously called `master` but is now called `main`. This change mirrors a similar change in many other projects.
+
 ## 0.15.5
 
 * Fix issues with Yarn PnP and Yarn's workspaces feature ([#2476](https://github.com/evanw/esbuild/issues/2476))
