@@ -958,6 +958,28 @@ module.exports = foo;
 console.log(module, exports);
 
 ================================================================================
+TestOutputForAssertTypeJSON
+---------- /out/js-entry.js ----------
+// foo.json
+var foo_default = {};
+
+// js-entry.js
+use(foo_default, foo_default, void 0);
+export {
+  foo_default as default
+};
+
+---------- /out/ts-entry.js ----------
+// foo.json
+var foo_default = {};
+
+// ts-entry.ts
+use(foo_default, foo_default, void 0);
+export {
+  foo_default as default
+};
+
+================================================================================
 TestRequireCustomExtensionBase64
 ---------- /out.js ----------
 // test.custom
