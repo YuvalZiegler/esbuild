@@ -102,7 +102,7 @@ var helpText = func(colors logger.Colors) string {
   --minify-whitespace       Remove whitespace in output files
   --minify-identifiers      Shorten identifiers in output files
   --minify-syntax           Use equivalent but shorter syntax in output files
-  --out-extension:.js=.mjs  Use a custom output extension instead of ".js"
+  --outext:.js=.mjs         Use a custom output extension instead of ".js"
   --outbase=...             The base path used to determine entry point output
                             paths (for multiple entry points)
   --preserve-symlinks       Disable symlink resolution for module lookup

@@ -248,27 +248,27 @@ let buildTests = {
     assert.strictEqual(result.__esModule, true)
   },
 
-  async outExtensionJS({ esbuild, testDir }) {
+  async outextJS({ esbuild, testDir }) {
     const input = path.join(testDir, 'in.js')
     const output = path.join(testDir, 'in.mjs')
     await writeFileAsync(input, 'console.log("test")')
     await esbuild.build({
       entryPoints: [input],
       outdir: testDir,
-      outExtension: { '.js': '.mjs' },
+      outext: { '.js': '.mjs' },
     })
     const mjs = await readFileAsync(output, 'utf8')
     assert.strictEqual(mjs, 'console.log("test");\n')
   },
 
-  async outExtensionCSS({ esbuild, testDir }) {
+  async outextCSS({ esbuild, testDir }) {
     const input = path.join(testDir, 'in.css')
     const output = path.join(testDir, 'in.notcss')
     await writeFileAsync(input, 'body {}')
     await esbuild.build({
       entryPoints: [input],
       outdir: testDir,
-      outExtension: { '.css': '.notcss' },
+      outext: { '.css': '.notcss' },
     })
     const notcss = await readFileAsync(output, 'utf8')
     assert.strictEqual(notcss, 'body {\n}\n')
@@ -1804,7 +1804,7 @@ export {
       outdir,
       format: 'esm',
       splitting: true,
-      outExtension: { '.js': '.mjs' },
+      outext: { '.js': '.mjs' },
       chunkNames: 'chunks/[hash]/[name]',
     })
 

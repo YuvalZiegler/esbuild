@@ -243,7 +243,7 @@ function flagsForBuildOptions(
   let conditions = getFlag(options, keys, 'conditions', mustBeArray);
   let external = getFlag(options, keys, 'external', mustBeArray);
   let loader = getFlag(options, keys, 'loader', mustBeObject);
-  let outExtension = getFlag(options, keys, 'outExtension', mustBeObject);
+  let outext = getFlag(options, keys, 'outext', mustBeObject);
   let publicPath = getFlag(options, keys, 'publicPath', mustBeString);
   let entryNames = getFlag(options, keys, 'entryNames', mustBeString);
   let chunkNames = getFlag(options, keys, 'chunkNames', mustBeString);
@@ -333,10 +333,10 @@ function flagsForBuildOptions(
       flags.push(`--loader:${ext}=${loader[ext]}`);
     }
   }
-  if (outExtension) {
-    for (let ext in outExtension) {
-      if (ext.indexOf('=') >= 0) throw new Error(`Invalid out extension: ${ext}`);
-      flags.push(`--out-extension:${ext}=${outExtension[ext]}`);
+  if (outext) {
+    for (let ext in outext) {
+      if (ext.indexOf('=') >= 0) throw new Error(`Invalid outext: ${ext}`);
+      flags.push(`--outext:${ext}=${outext[ext]}`);
     }
   }
 

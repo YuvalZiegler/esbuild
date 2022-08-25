@@ -182,7 +182,7 @@ const tests = {
       mainFields: ['x'],
       write: true,
       tsconfig: 'x',
-      outExtension: { 'x': 'y' },
+      outext: { 'x': 'y' },
       publicPath: 'x',
       inject: ['x'],
       entryPoints: ['x'],

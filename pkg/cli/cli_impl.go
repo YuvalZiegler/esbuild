@@ -537,20 +537,20 @@ func parseOptionsImpl(
 				transformOpts.Engines = engines
 			}
 
-		case strings.HasPrefix(arg, "--out-extension:") && buildOpts != nil:
-			value := arg[len("--out-extension:"):]
+		case strings.HasPrefix(arg, "--outext:") && buildOpts != nil:
+			value := arg[len("--outext:"):]
 			equals := strings.IndexByte(value, '=')
 			if equals == -1 {
 				return parseOptionsExtras{}, cli_helpers.MakeErrorWithNote(
 					fmt.Sprintf("Missing \"=\" in %q", arg),
-					"You need to use either \"--out-extension:.js=...\" or \"--out-extension:.css=...\" "+
+					"You need to use either \"--outext:.js=...\" or \"--outext:.css=...\" "+
 						"to specify the file type that the output extension applies to .",
 				)
 			}
-			if buildOpts.OutExtensions == nil {
-				buildOpts.OutExtensions = make(map[string]string)
+			if buildOpts.Outext == nil {
+				buildOpts.Outext = make(map[string]string)
 			}
-			buildOpts.OutExtensions[value[:equals]] = value[equals+1:]
+			buildOpts.Outext[value[:equals]] = value[equals+1:]
 
 		case strings.HasPrefix(arg, "--platform="):
 			value := arg[len("--platform="):]
@@ -619,7 +619,7 @@ func parseOptionsImpl(
 				)
 			}
 			if buildOpts != nil {
-				buildOpts.JSXMode = mode
+				buildOpts.JSX = mode
 			} else {
 				transformOpts.JSXMode = mode
 			}
@@ -818,17 +818,17 @@ func parseOptionsImpl(
 			}
 
 			colon := map[string]bool{
-				"banner":        true,
-				"define":        true,
-				"drop":          true,
-				"external":      true,
-				"footer":        true,
-				"inject":        true,
-				"loader":        true,
-				"log-override":  true,
-				"out-extension": true,
-				"pure":          true,
-				"supported":     true,
+				"banner":       true,
+				"define":       true,
+				"drop":         true,
+				"external":     true,
+				"footer":       true,
+				"inject":       true,
+				"loader":       true,
+				"log-override": true,
+				"outext":       true,
+				"pure":         true,
+				"supported":    true,
 			}
 
 			note := ""

@@ -618,10 +618,10 @@ func validatePath(log logger.Log, fs fs.FS, relPath string, pathKind string) str
 	return absPath
 }
 
-func validateOutputExtensions(log logger.Log, outExtensions map[string]string) (js string, css string) {
-	for key, value := range outExtensions {
+func validateOutputExtensions(log logger.Log, outext map[string]string) (js string, css string) {
+	for key, value := range outext {
 		if !isValidExtension(value) {
-			log.AddError(nil, logger.Range{}, fmt.Sprintf("Invalid output extension: %q", value))
+			log.AddError(nil, logger.Range{}, fmt.Sprintf("Invalid outext: %q", value))
 		}
 		switch key {
 		case ".js":
@@ -629,7 +629,7 @@ func validateOutputExtensions(log logger.Log, outExtensions map[string]string) (
 		case ".css":
 			css = value
 		default:
-			log.AddError(nil, logger.Range{}, fmt.Sprintf("Invalid output extension: %q (valid: .css, .js)", key))
+			log.AddError(nil, logger.Range{}, fmt.Sprintf("Invalid outext: %q (valid: .css, .js)", key))
 		}
 	}
 	return
@@ -880,7 +880,7 @@ func rebuildImpl(
 	}
 	targetFromAPI, jsFeatures, cssFeatures, targetEnv := validateFeatures(log, buildOpts.Target, buildOpts.Engines)
 	jsOverrides, jsMask, cssOverrides, cssMask := validateSupported(log, buildOpts.Supported)
-	outJS, outCSS := validateOutputExtensions(log, buildOpts.OutExtensions)
+	outJS, outCSS := validateOutputExtensions(log, buildOpts.Outext)
 	bannerJS, bannerCSS := validateBannerOrFooter(log, "banner", buildOpts.Banner)
 	footerJS, footerCSS := validateBannerOrFooter(log, "footer", buildOpts.Footer)
 	minify := buildOpts.MinifyWhitespace && buildOpts.MinifyIdentifiers && buildOpts.MinifySyntax
@@ -897,8 +897,8 @@ func rebuildImpl(
 		UnsupportedCSSFeatureOverridesMask: cssMask,
 		OriginalTargetEnv:                  targetEnv,
 		JSX: config.JSXOptions{
-			Preserve:         buildOpts.JSXMode == JSXModePreserve,
-			AutomaticRuntime: buildOpts.JSXMode == JSXModeAutomatic,
+			Preserve:         buildOpts.JSX == JSXModePreserve,
+			AutomaticRuntime: buildOpts.JSX == JSXModeAutomatic,
 			Factory:          validateJSXExpr(log, buildOpts.JSXFactory, "factory"),
 			Fragment:         validateJSXExpr(log, buildOpts.JSXFragment, "fragment"),
 			Development:      buildOpts.JSXDev,

@@ -276,7 +276,7 @@ type BuildOptions struct {
 	IgnoreAnnotations bool                   // Documentation: https://esbuild.github.io/api/#ignore-annotations
 	LegalComments     LegalComments          // Documentation: https://esbuild.github.io/api/#legal-comments
 
-	JSXMode         JSXMode // Documentation: https://esbuild.github.io/api/#jsx-mode
+	JSX             JSXMode // Documentation: https://esbuild.github.io/api/#jsx-mode
 	JSXFactory      string  // Documentation: https://esbuild.github.io/api/#jsx-factory
 	JSXFragment     string  // Documentation: https://esbuild.github.io/api/#jsx-fragment
 	JSXImportSource string  // Documentation: https://esbuild.github.io/api/#jsx-import-source
@@ -303,7 +303,7 @@ type BuildOptions struct {
 	Loader            map[string]Loader // Documentation: https://esbuild.github.io/api/#loader
 	ResolveExtensions []string          // Documentation: https://esbuild.github.io/api/#resolve-extensions
 	Tsconfig          string            // Documentation: https://esbuild.github.io/api/#tsconfig
-	OutExtensions     map[string]string // Documentation: https://esbuild.github.io/api/#out-extension
+	Outext            map[string]string // Documentation: https://esbuild.github.io/api/#outext
 	PublicPath        string            // Documentation: https://esbuild.github.io/api/#public-path
 	Inject            []string          // Documentation: https://esbuild.github.io/api/#inject
 	Banner            map[string]string // Documentation: https://esbuild.github.io/api/#banner

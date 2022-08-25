@@ -110,8 +110,8 @@ export interface BuildOptions extends CommonOptions {
   allowOverwrite?: boolean;
   /** Documentation: https://esbuild.github.io/api/#tsconfig */
   tsconfig?: string;
-  /** Documentation: https://esbuild.github.io/api/#out-extension */
-  outExtension?: { [ext: string]: string };
+  /** Documentation: https://esbuild.github.io/api/#outext */
+  outext?: { [ext: string]: string };
   /** Documentation: https://esbuild.github.io/api/#public-path */
   publicPath?: string;
   /** Documentation: https://esbuild.github.io/api/#entry-names */

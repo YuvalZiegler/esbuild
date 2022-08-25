@@ -6,6 +6,19 @@
 
 Unlike previous releases, many of these changes are very clearly breaking changes. These are changes that I have been meaning to make for a while. I have deliberately batched them up into a single release instead of doing them over time as they have become apparent to minimize the disruption they will cause. Releases like this do not happen often.
 
+* Some API parameter names have changed
+
+    This release changes some API name parameters to be more consistent. The changes are as follows:
+
+    * Output extensions
+        * CLI: `--out-extension:` => `--outext:`
+        * JS: `outExtension` => `outext`
+        * Go: `OutExtensions` => `Outext`
+    * JSX
+        * CLI: `--jsx=` => `--jsx=` (no change)
+        * JS: `jsx` => `jsx` (no change)
+        * Go: `JSXMode` => `JSX`
+
 * Move all binary executable packages to the `@esbuild/` scope
 
     Binary package executables for esbuild are published as individual packages separate from the main `esbuild` package so you only have to download the relevant one for the current platform when you install esbuild. This release moves all of these packages under the `@esbuild/` scope to avoid collisions with 3rd-party packages. It also changes them to a consistent naming scheme that uses the `os` and `cpu` names from node.
