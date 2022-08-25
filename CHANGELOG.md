@@ -25,6 +25,21 @@ Unlike previous releases, many of these changes are very clearly breaking change
 
     The `define` parameter appears at first glance to take a JSON object if you aren't paying close attention, but this actually isn't true. Values for `define` are instead strings of JavaScript code. This means you have to use `define: { foo: '"bar"' }` to replace `foo` with the string `"bar"`. Using `define: { foo: 'bar' }` actually replaces `foo` with the identifier `bar`. Previously esbuild allowed you to pass `define: { foo: false }` and `false` was automatically converted into a string, which made it more confusing to understand what `define` actually represents. Starting with this release, passing non-string values such as with `define: { foo: false }` will no longer be allowed.
 
+* Interpret and rewrite `new URL(..., import.meta.url)` expressions when bundling
+
+    Some other bundlers have adopted a convention where the syntax `new URL("./file.js", import.meta.url)` causes `file.js` to be included in the current bundling operation as an additional entry point. The `"./file.js"` string is rewritten in the bundler's output to point to the resulting generated file for that entry point in the output directory (relative to the generated file containing the `new URL(...)` syntax). This is somewhat similar to how `import('./file.js')` works except that this reference just returns a `URL` object without importing the module. That lets you pass the URL of a module to other APIs such as `new Worker(...)` that take a script URL as input.
+
+    Previously this pattern didn't work at all with esbuild, but it will now work in esbuild starting with this release. To use it you must ensure that bundling is enabled, that the output format is set to `esm`, and that code splitting is enabled (so you need to use `--bundle --format=esm --splitting`). In addition, the path must be a relative path (i.e. it must start with either `./` or `../`). Here's what using this feature looks like:
+
+    ```ts
+    const url = new URL('./worker.ts', import.meta.url)
+    const worker = new Worker(url, { type: 'module' })
+
+    worker.onmessage = (event: MessageEvent) => {
+      console.log(event.data)
+    }
+    ```
+
 * Move all binary executable packages to the `@esbuild/` scope
 
     Binary package executables for esbuild are published as individual packages separate from the main `esbuild` package so you only have to download the relevant one for the current platform when you install esbuild. This release moves all of these packages under the `@esbuild/` scope to avoid collisions with 3rd-party packages. It also changes them to a consistent naming scheme that uses the `os` and `cpu` names from node.
