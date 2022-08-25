@@ -107,7 +107,7 @@ function generateWorkerCode({ esbuildPath, wasm_exec_js, minify, target }) {
 
 exports.buildWasmLib = async (esbuildPath) => {
   // Asynchronously start building the WebAssembly module
-  const npmWasmDir = path.join(repoDir, 'npm', 'esbuild-wasm')
+  const npmWasmDir = path.join(repoDir, 'npm', '@esbuild', 'wasm')
   const goBuildPromise = new Promise((resolve, reject) => childProcess.execFile('go',
     [
       'build',
@@ -124,14 +124,14 @@ exports.buildWasmLib = async (esbuildPath) => {
   fs.mkdirSync(libDir, { recursive: true })
   fs.mkdirSync(esmDir, { recursive: true })
 
-  // Generate "npm/esbuild-wasm/wasm_exec.js"
+  // Generate "npm/@esbuild/wasm/wasm_exec.js"
   const GOROOT = childProcess.execFileSync('go', ['env', 'GOROOT']).toString().trim();
   let wasm_exec_js = fs.readFileSync(path.join(GOROOT, 'misc', 'wasm', 'wasm_exec.js'), 'utf8');
   let wasm_exec_node_js = fs.readFileSync(path.join(GOROOT, 'misc', 'wasm', 'wasm_exec_node.js'), 'utf8');
   fs.writeFileSync(path.join(npmWasmDir, 'wasm_exec.js'), wasm_exec_js);
   fs.writeFileSync(path.join(npmWasmDir, 'wasm_exec_node.js'), wasm_exec_node_js);
 
-  // Generate "npm/esbuild-wasm/lib/main.js"
+  // Generate "npm/@esbuild/wasm/lib/main.js"
   childProcess.execFileSync(esbuildPath, [
     path.join(repoDir, 'lib', 'npm', 'node.ts'),
     '--outfile=' + path.join(libDir, 'main.js'),
@@ -145,7 +145,7 @@ exports.buildWasmLib = async (esbuildPath) => {
     '--log-level=warning',
   ], { cwd: repoDir })
 
-  // Generate "npm/esbuild-wasm/lib/main.d.ts" and "npm/esbuild-wasm/lib/browser.d.ts"
+  // Generate "npm/@esbuild/wasm/lib/main.d.ts" and "npm/@esbuild/wasm/lib/browser.d.ts"
   const types_ts = fs.readFileSync(path.join(repoDir, 'lib', 'shared', 'types.ts'), 'utf8')
   fs.writeFileSync(path.join(libDir, 'main.d.ts'), types_ts)
   fs.writeFileSync(path.join(libDir, 'browser.d.ts'), types_ts)
@@ -156,7 +156,7 @@ exports.buildWasmLib = async (esbuildPath) => {
     const wasmWorkerCodeUMD = generateWorkerCode({ esbuildPath, wasm_exec_js, minify, target: umdBrowserTarget })
     const wasmWorkerCodeESM = generateWorkerCode({ esbuildPath, wasm_exec_js, minify, target: esmBrowserTarget })
 
-    // Generate "npm/esbuild-wasm/lib/browser.*"
+    // Generate "npm/@esbuild/wasm/lib/browser.*"
     const umdPrefix = `(module=>{`
     const umdSuffix = `})(typeof module==="object"?module:{set exports(x){(typeof self!=="undefined"?self:this).esbuild=x}});`
     const browserCJS = childProcess.execFileSync(esbuildPath, [
@@ -172,7 +172,7 @@ exports.buildWasmLib = async (esbuildPath) => {
     ].concat(minifyFlags), { cwd: repoDir }).toString().replace('WEB_WORKER_FUNCTION', wasmWorkerCodeUMD)
     fs.writeFileSync(path.join(libDir, minify ? 'browser.min.js' : 'browser.js'), browserCJS)
 
-    // Generate "npm/esbuild-wasm/esm/browser.min.js"
+    // Generate "npm/@esbuild/wasm/esm/browser.min.js"
     const browserESM = childProcess.execFileSync(esbuildPath, [
       path.join(repoDir, 'lib', 'npm', 'browser.ts'),
       '--bundle',
@@ -210,7 +210,7 @@ module.exports = ${JSON.stringify(exit0Map, null, 2)};
 
   // Also copy this into the WebAssembly shim directories
   for (const dir of [
-    path.join(repoDir, 'npm', 'esbuild-android-64'),
+    path.join(repoDir, 'npm', '@esbuild', 'android-x64'),
   ]) {
     fs.mkdirSync(path.join(dir, 'bin'), { recursive: true })
     fs.writeFileSync(path.join(dir, 'wasm_exec.js'), wasm_exec_js);
@@ -261,7 +261,7 @@ const buildDenoLib = (esbuildPath) => {
   fs.writeFileSync(path.join(denoDir, 'wasm.d.ts'), types_ts)
 
   // And copy the WebAssembly file over to the Deno library as well
-  fs.copyFileSync(path.join(repoDir, 'npm', 'esbuild-wasm', 'esbuild.wasm'), path.join(repoDir, 'deno', 'esbuild.wasm'));
+  fs.copyFileSync(path.join(repoDir, 'npm', '@esbuild', 'wasm', 'esbuild.wasm'), path.join(repoDir, 'deno', 'esbuild.wasm'));
 }
 
 // Writing a file atomically is important for watch mode tests since we don't

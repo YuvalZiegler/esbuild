@@ -6,6 +6,38 @@
 
 Unlike previous releases, many of these changes are very clearly breaking changes. These are changes that I have been meaning to make for a while. I have deliberately batched them up into a single release instead of doing them over time as they have become apparent to minimize the disruption they will cause. Releases like this do not happen often.
 
+* Move all binary executable packages to the `@esbuild/` scope
+
+    Binary package executables for esbuild are published as individual packages separate from the main `esbuild` package so you only have to download the relevant one for the current platform when you install esbuild. This release moves all of these packages under the `@esbuild/` scope to avoid collisions with 3rd-party packages. It also changes them to a consistent naming scheme that uses the `os` and `cpu` names from node.
+
+    The package name changes are as follows:
+
+    * `@esbuild/linux-loong64` => `@esbuild/linux-loong64` (no change)
+    * `esbuild-android-64` => `@esbuild/android-x64`
+    * `esbuild-android-arm64` => `@esbuild/android-arm64`
+    * `esbuild-darwin-64` => `@esbuild/darwin-x64`
+    * `esbuild-darwin-arm64` => `@esbuild/darwin-arm64`
+    * `esbuild-freebsd-64` => `@esbuild/freebsd-x64`
+    * `esbuild-freebsd-arm64` => `@esbuild/freebsd-arm64`
+    * `esbuild-linux-32` => `@esbuild/linux-ia32`
+    * `esbuild-linux-64` => `@esbuild/linux-x64`
+    * `esbuild-linux-arm` => `@esbuild/linux-arm`
+    * `esbuild-linux-arm64` => `@esbuild/linux-arm64`
+    * `esbuild-linux-mips64le` => `@esbuild/linux-mips64el`
+    * `esbuild-linux-ppc64le` => `@esbuild/linux-ppc64`
+    * `esbuild-linux-riscv64` => `@esbuild/linux-riscv64`
+    * `esbuild-linux-s390x` => `@esbuild/linux-s390x`
+    * `esbuild-netbsd-64` => `@esbuild/netbsd-x64`
+    * `esbuild-openbsd-64` => `@esbuild/openbsd-x64`
+    * `esbuild-sunos-64` => `@esbuild/sunos-x64`
+    * `esbuild-wasm` => `@esbuild/wasm`
+    * `esbuild-windows-32` => `@esbuild/win32-ia32`
+    * `esbuild-windows-64` => `@esbuild/win32-x64`
+    * `esbuild-windows-arm64` => `@esbuild/win32-arm64`
+    * `esbuild` => `esbuild` (no change)
+
+    Normal usage of the `esbuild` package should not be affected. These name changes should only affect users of the `esbuild-wasm` package as well as tools that hard-coded the individual binary executable package names into custom esbuild downloader scripts.
+
 * Rename the `master` branch to `main`
 
     The primary branch for this repository was previously called `master` but is now called `main`. This change mirrors a similar change in many other projects.

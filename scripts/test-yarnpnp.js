@@ -56,7 +56,7 @@ function runTests() {
 
   // Test the WebAssembly build
   esbuild.buildWasmLib(ESBUILD_BINARY_PATH)
-  run('node ../../npm/esbuild-wasm/bin/esbuild in.mjs --bundle --log-level=debug --platform=node --outfile=out-wasm.js')
+  run('node ../../npm/@esbuild/wasm/bin/esbuild in.mjs --bundle --log-level=debug --platform=node --outfile=out-wasm.js')
   run('node out-wasm.js')
 
   // Note: This is currently failing due to a bug in Yarn that generates invalid
@@ -66,7 +66,7 @@ function runTests() {
   /*
     // Test the WebAssembly build when run through Yarn's file system shim
     esbuild.buildWasmLib(ESBUILD_BINARY_PATH)
-    run('yarn node ../../npm/esbuild-wasm/bin/esbuild in.mjs --bundle --log-level=debug --platform=node --outfile=out-wasm-yarn.js')
+    run('yarn node ../../npm/@esbuild/wasm/bin/esbuild in.mjs --bundle --log-level=debug --platform=node --outfile=out-wasm-yarn.js')
     run('node out-wasm-yarn.js')
   */
 }

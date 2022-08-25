@@ -4,11 +4,11 @@ const path = require('path')
 const url = require('url')
 const fs = require('fs')
 
-const js = fs.readFileSync(path.join(__dirname, '..', '..', 'npm', 'esbuild-wasm', 'lib', 'browser.js'))
-const jsMin = fs.readFileSync(path.join(__dirname, '..', '..', 'npm', 'esbuild-wasm', 'lib', 'browser.min.js'))
-const esm = fs.readFileSync(path.join(__dirname, '..', '..', 'npm', 'esbuild-wasm', 'esm', 'browser.js'))
-const esmMin = fs.readFileSync(path.join(__dirname, '..', '..', 'npm', 'esbuild-wasm', 'esm', 'browser.min.js'))
-const wasm = fs.readFileSync(path.join(__dirname, '..', '..', 'npm', 'esbuild-wasm', 'esbuild.wasm'))
+const js = fs.readFileSync(path.join(__dirname, '..', '..', 'npm', '@esbuild', 'wasm', 'lib', 'browser.js'))
+const jsMin = fs.readFileSync(path.join(__dirname, '..', '..', 'npm', '@esbuild', 'wasm', 'lib', 'browser.min.js'))
+const esm = fs.readFileSync(path.join(__dirname, '..', '..', 'npm', '@esbuild', 'wasm', 'esm', 'browser.js'))
+const esmMin = fs.readFileSync(path.join(__dirname, '..', '..', 'npm', '@esbuild', 'wasm', 'esm', 'browser.min.js'))
+const wasm = fs.readFileSync(path.join(__dirname, '..', '..', 'npm', '@esbuild', 'wasm', 'esbuild.wasm'))
 
 // This is converted to a string and run inside the browser
 async function runAllTests({ esbuild }) {

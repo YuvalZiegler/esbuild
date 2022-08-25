@@ -12,8 +12,8 @@ import tty = require('tty');
 
 declare const ESBUILD_VERSION: string;
 
-// This file is used for both the "esbuild" package and the "esbuild-wasm"
-// package. "WASM" will be true for "esbuild-wasm" and false for "esbuild".
+// This file is used for both the "esbuild" package and the "@esbuild/wasm"
+// package. "WASM" will be true for "@esbuild/wasm" and false for "esbuild".
 declare const WASM: boolean;
 
 let worker_threads: typeof import('worker_threads') | undefined;

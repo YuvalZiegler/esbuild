@@ -199,7 +199,7 @@ const tests = {
 
   importRelativeFileTest({ testDir, esbuildPathWASM }) {
     const outfile = path.join(testDir, 'out.js')
-    const packageJSON = path.join(__dirname, '..', 'npm', 'esbuild-wasm', 'package.json');
+    const packageJSON = path.join(__dirname, '..', 'npm', '@esbuild', 'wasm', 'package.json');
     child_process.execFileSync('node', [
       esbuildPathWASM,
       '--bundle',
@@ -219,7 +219,7 @@ const tests = {
 
   importAbsoluteFileTest({ testDir, esbuildPathWASM }) {
     const outfile = path.join(testDir, 'out.js')
-    const packageJSON = path.join(__dirname, '..', 'npm', 'esbuild-wasm', 'package.json');
+    const packageJSON = path.join(__dirname, '..', 'npm', '@esbuild', 'wasm', 'package.json');
     child_process.execFileSync('node', [
       esbuildPathWASM,
       '--bundle',
@@ -342,7 +342,7 @@ async function main() {
   const esbuildPathNative = path.join(__dirname, '..', process.platform === 'win32' ? 'esbuild.exe' : 'esbuild');
   await buildWasmLib(esbuildPathNative);
 
-  const esbuildPathWASM = path.join(__dirname, '..', 'npm', 'esbuild-wasm', 'bin', 'esbuild');
+  const esbuildPathWASM = path.join(__dirname, '..', 'npm', '@esbuild', 'wasm', 'bin', 'esbuild');
   const testDir = path.join(__dirname, '.wasm-tests')
 
   // Run all tests in serial because WebAssembly compilation is a CPU hog

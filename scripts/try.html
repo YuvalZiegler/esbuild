@@ -250,7 +250,7 @@
     <h2>Output</h2>
     <div class="outer"></div>
   </section>
-  <script src="../npm/esbuild-wasm/lib/browser.js"></script>
+  <script src="../npm/@esbuild/wasm/lib/browser.js"></script>
   <script>
     const input = document.querySelector('#input textarea')
     const target = document.querySelector('#target')
@@ -313,7 +313,7 @@
     }
 
     esbuild.initialize({
-      wasmURL: '../npm/esbuild-wasm/esbuild.wasm',
+      wasmURL: '../npm/@esbuild/wasm/esbuild.wasm',
     }).then(() => {
       const output = document.querySelector('#output .outer')
       let debounceTimeout = 0
