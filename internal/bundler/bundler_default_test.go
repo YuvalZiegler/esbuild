@@ -3196,6 +3196,11 @@ func TestImportMetaCommonJS(t *testing.T) {
 			OutputFormat:  config.FormatCommonJS,
 			AbsOutputFile: "/out.js",
 		},
+		expectedScanLog: `entry.js: WARNING: "import.meta" is not available with the "cjs" output format and will be empty
+NOTE: You need to set the output format to "esm" for "import.meta" to work correctly.
+entry.js: WARNING: "import.meta" is not available with the "cjs" output format and will be empty
+NOTE: You need to set the output format to "esm" for "import.meta" to work correctly.
+`,
 	})
 }
 
