@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"path"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -156,8 +157,60 @@ func (dm DebugMeta) LogErrorMsg(log logger.Log, source *logger.Source, r logger.
 	log.AddMsg(msg)
 }
 
+type GlobWildcard uint8
+
+const (
+	GlobNone GlobWildcard = iota
+	GlobAllExceptSlash
+	GlobAllIncludingSlash
+)
+
+type GlobPart struct {
+	Prefix   string
+	Wildcard GlobWildcard
+}
+
+// The returned array will always be at least one element. If there are no
+// wildcards then it will be exactly one element, and if there are wildcards
+// then it will be more than one element.
+func ParseGlobPattern(text string) (pattern []GlobPart) {
+	for {
+		star := strings.IndexByte(text, '*')
+		if star < 0 {
+			pattern = append(pattern, GlobPart{Prefix: text})
+			break
+		}
+		count := 1
+		for star+count < len(text) && text[star+count] == '*' {
+			count++
+		}
+		wildcard := GlobAllExceptSlash
+		if count > 1 && (star == 0 || text[star-1] == '/') && (star+count == len(text) || text[star+count] == '/') {
+			wildcard = GlobAllIncludingSlash // A "globstar" path segment
+		}
+		pattern = append(pattern, GlobPart{Prefix: text[:star], Wildcard: wildcard})
+		text = text[star+count:]
+	}
+	return
+}
+
+func GlobPatternToString(pattern []GlobPart) string {
+	sb := strings.Builder{}
+	for _, part := range pattern {
+		sb.WriteString(part.Prefix)
+		switch part.Wildcard {
+		case GlobAllExceptSlash:
+			sb.WriteByte('*')
+		case GlobAllIncludingSlash:
+			sb.WriteString("**")
+		}
+	}
+	return sb.String()
+}
+
 type Resolver interface {
 	Resolve(sourceDir string, importPath string, kind ast.ImportKind) (result *ResolveResult, debug DebugMeta)
+	ResolveGlob(sourceDir string, importPath []GlobPart, kind ast.ImportKind) (results []ResolveResult)
 	ResolveAbs(absPath string) *ResolveResult
 	PrettyPath(path logger.Path) string
 
@@ -410,6 +463,15 @@ func (rr *resolver) Resolve(sourceDir string, importPath string, kind ast.Import
 		return nil, debugMeta
 	}
 
+	// Glob imports only work in a multi-path context
+	if strings.ContainsRune(importPath, '*') {
+		if r.debugLogs != nil {
+			r.debugLogs.addNote("Cannot resolve a path containing a wildcard character in a single-path context")
+		}
+		r.flushDebugLogs(flushDueToFailure)
+		return nil, debugMeta
+	}
+
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	sourceDirInfo := r.loadModuleSuffixesForSourceDir(sourceDir)
@@ -465,6 +527,102 @@ func (rr *resolver) Resolve(sourceDir string, importPath string, kind ast.Import
 	r.finalizeResolve(result)
 	r.flushDebugLogs(flushDueToSuccess)
 	return result, debugMeta
+}
+
+// This returns nil on failure and non-nil on success. Note that this may
+// return an empty array to indicate a successful search that returned zero
+// results.
+func (rr *resolver) ResolveGlob(sourceDir string, importPathPattern []GlobPart, kind ast.ImportKind) []ResolveResult {
+	var debugMeta DebugMeta
+	r := resolverQuery{
+		resolver:  rr,
+		debugMeta: &debugMeta,
+		kind:      kind,
+	}
+	if r.log.Level <= logger.LevelDebug {
+		r.debugLogs = &debugLogs{what: fmt.Sprintf(
+			"Resolving glob import %q in directory %q of type %q",
+			GlobPatternToString(importPathPattern), sourceDir, kind.StringForMetafile())}
+	}
+
+	// Glob patterns only work for relative URLs
+	if len(importPathPattern) == 0 || (!strings.HasPrefix(importPathPattern[0].Prefix, "./") && !strings.HasPrefix(importPathPattern[0].Prefix, "../")) {
+		if r.debugLogs != nil {
+			r.debugLogs.addNote("Ignoring glob import that doesn't start with \"./\" or \"../\"")
+		}
+		r.flushDebugLogs(flushDueToFailure)
+		return nil
+	}
+
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	// TODO: handle leading directories in the pattern (including "../")
+
+	// Look up the directory to start from
+	sourceDirInfo := r.dirInfoCached(sourceDir)
+	if sourceDirInfo == nil {
+		if r.debugLogs != nil {
+			r.debugLogs.addNote(fmt.Sprintf("Failed to find the directory %q", sourceDir))
+		}
+		r.flushDebugLogs(flushDueToFailure)
+		return nil
+	}
+
+	// Turn the glob pattern into a regular expression
+	canMatchOnSlash := false
+	wasGlobStar := false
+	sb := strings.Builder{}
+	sb.WriteByte('^')
+	for _, part := range importPathPattern {
+		prefix := part.Prefix
+		if wasGlobStar && len(prefix) > 0 && prefix[0] == '/' {
+			prefix = prefix[1:] // Move over the "/" after a globstar
+		}
+		sb.WriteString(regexp.QuoteMeta(prefix))
+		if part.Wildcard == GlobAllIncludingSlash {
+			// It's a globstar, so match zero or more path segments
+			sb.WriteString("(?:[^/]*(?:/|$))*")
+			canMatchOnSlash = true
+			wasGlobStar = true
+		} else {
+			// It's not a globstar, so only match one path segment
+			sb.WriteString("[^/]*")
+			wasGlobStar = false
+		}
+	}
+	sb.WriteByte('$')
+	re := regexp.MustCompile(sb.String())
+
+	var visit func(dirInfo *dirInfo, dir string)
+	results := []ResolveResult{}
+	visit = func(dirInfo *dirInfo, dir string) {
+		for _, key := range dirInfo.entries.SortedKeys() {
+			entry, _ := dirInfo.entries.Get(key)
+			switch entry.Kind(r.fs) {
+			case fs.DirEntry:
+				// To avoid infinite loops, don't follow any symlinks
+				if canMatchOnSlash && entry.Symlink(r.fs) == "" {
+					if childDirInfo := r.dirInfoCached(r.fs.Join(dirInfo.absPath, key)); childDirInfo != nil {
+						visit(childDirInfo, fmt.Sprintf("%s/%s", dir, key))
+					}
+				}
+
+			case fs.FileEntry:
+				relPath := fmt.Sprintf("%s/%s", dir, key)
+				if re.MatchString(relPath) {
+					absPath := r.fs.Join(dirInfo.absPath, relPath)
+					result := ResolveResult{PathPair: PathPair{Primary: logger.Path{Text: absPath, Namespace: "file"}}}
+					r.finalizeResolve(&result)
+					results = append(results, result)
+				}
+			}
+		}
+	}
+
+	visit(sourceDirInfo, ".")
+	r.flushDebugLogs(flushDueToSuccess)
+	return results
 }
 
 func (r *resolverQuery) loadModuleSuffixesForSourceDir(sourceDir string) *dirInfo {
